@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="vertical"
+	xmlns:local="*" creationComplete="initApp();">
+
+	<mx:Style>
+		Application {
+			backgroundColor: #000000;
+			themeColor: #999900;
+			color: #333333;
+		}
+
+		Accordion, Box, List {
+			backgroundAlpha: 0.4;
+		}
+
+		Panel {
+			color: #ffffff;
+		}
+
+		.titleStyle {
+			fontSize: 30;
+			fontWeight: bold;
+		}
+	</mx:Style>
+
+	<mx:Script>
+		<![CDATA[
+			import jp.shichiseki.exif.ExifLoader;
+			import jp.shichiseki.exif.IFD;
+			import jp.shichiseki.exif.ExifInfo;
+			import flash.net.URLRequest;
+			import flash.display.Loader;
+			import flash.events.Event;
+			import mx.controls.List;
+			import mx.containers.Box;
+
+			private var loader:ExifLoader;
+			private var thumbLoader:Loader;
+
+			private function initApp():void {
+				loader = new ExifLoader();
+				thumbLoader = new Loader();
+				loader.addEventListener(Event.COMPLETE, onComplete);
+				getPhoto();
+			}
+
+			private function onComplete(e:Event):void {
+				thumbLoader.loadBytes(loader.exif.thumbnailData);
+				thumbHolder.addChild(thumbLoader);
+				refreshExifInfo(loader.exif);
+			}
+
+			private function refreshExifInfo(exif:ExifInfo):void {
+				log(exif.ifds.primary["Make"]);
+				infoContainer.removeAllChildren();
+				if (exif.ifds.primary)
+					infoContainer.addChild(createInfoList(exif.ifds.primary));
+				if (exif.ifds.exif)
+					infoContainer.addChild(createInfoList(exif.ifds.exif));
+				if (exif.ifds.gps)
+					infoContainer.addChild(createInfoList(exif.ifds.gps));
+				if (exif.ifds.interoperability)
+					infoContainer.addChild(createInfoList(exif.ifds.interoperability));
+				if (exif.ifds.thumbnail)
+					infoContainer.addChild(createInfoList(exif.ifds.thumbnail));
+			}
+
+			private function createInfoList(ifd:IFD):Box {
+				if (!ifd) return null;
+				var dataProvider:Array = new Array();
+				for (var entry:String in ifd) {
+					dataProvider.push({"label":entry + ": " + ifd[entry]});
+				}
+				var list:List = new List();
+				list.dataProvider = dataProvider;
+				list.percentHeight = 100;
+				list.percentWidth = 100;
+				var box:Box = new Box();
+				box.percentHeight = 100;
+				box.percentWidth = 100;
+				box.addChild(list);
+				box.label = ifd.level;
+				return box;
+			}
+
+			private function getPhoto():void {
+				loader.load(new URLRequest(urlTxt.text));
+			}
+		]]>
+	</mx:Script>
+	<mx:Label styleName="titleStyle" text="ExifInfo for AS3" />
+	<mx:HBox width="100%">
+		<mx:TextInput id="urlTxt" width="70%" text="http://shichiseki.jp/as3/ExifInfo/sample.jpg" enter="getPhoto()" />
+		<mx:Button label="get" click="getPhoto()" />
+	</mx:HBox>
+	<mx:HBox width="100%" height="100%">
+		<mx:Panel id="thumbPanel" title="thumbnail" width="180" height="160" autoLayout="true">
+			<mx:UIComponent id="thumbHolder" width="100%" height="100%" />
+		</mx:Panel>
+		<mx:Accordion id="infoContainer" width="100%" height="100%">
+		</mx:Accordion>
+	</mx:HBox>
+</mx:Application>
