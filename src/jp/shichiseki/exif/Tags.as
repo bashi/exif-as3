@@ -48,7 +48,7 @@ package jp.shichiseki.exif {
 		public static function getSet(level:String):* {
 			if (!levels[level])
 				return null;
-			return levels[level].data;
+			return XML(levels[level].data);
 		}
 	}
 }

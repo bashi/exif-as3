@@ -17,6 +17,7 @@ package jp.shichiseki.exif {
 		private const SOI_MAKER:Array = [0xff, 0xd8];
 		private const APP1_MAKER:Array = [0xff, 0xe1];
 		private const EXIF_HEADER:Array = [0x45, 0x78, 0x69, 0x66, 0x00, 0x00];
+		private const JFIF_MAKER:Array = [0xff, 0xe0]; //new marker type
 
 		private var _tiffHeader:TIFFHeader;
 		/**
@@ -66,7 +67,16 @@ package jp.shichiseki.exif {
 		private function validate(stream:ByteArray):Boolean {
 			var app1DataSize:uint;
 			// JPG format check
-			if (!hasSoiMaker(stream) || !hasAPP1Maker(stream)) {
+			if (!hasSoiMaker(stream) ) {
+				return false;
+			}
+			if(hasJFIFMaker(stream)) //Skip the JFIF marker, if present. CWW
+			{
+				stream.position += 16;
+			}
+			else stream.position -=2; //Set position back to start of APP1 marker
+			
+			if ( !hasAPP1Maker(stream)) {
 				return false;
 			}
 			// handle app1 data size
@@ -125,6 +135,11 @@ package jp.shichiseki.exif {
 			return compareStreamBytes(stream, SOI_MAKER);
 		}
 
+		//New function to check for JFIF marker
+		private function hasJFIFMaker(stream:ByteArray):Boolean {
+			return compareStreamBytes(stream, JFIF_MAKER);
+		}
+		
 		private function hasAPP1Maker(stream:ByteArray):Boolean {
 			return compareStreamBytes(stream, APP1_MAKER);
 		}
