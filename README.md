@@ -66,4 +66,4 @@ The following code shows Exif IFD information.
 Lisence
 =======
 
-Mit-lisence.
+MIT-license.
